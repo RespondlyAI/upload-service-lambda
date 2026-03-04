@@ -1,0 +1,41 @@
+org: respondlyai
+app: upload-service
+service: upload-service-lambda
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 256
+  timeout: 29
+  # Reference the existing API Gateway from email service
+  apiGateway:
+    restApiId:
+      Fn::ImportValue: ${self:provider.stage}-RespondlyAI-RestApiId
+    restApiRootResourceId:
+      Fn::ImportValue: ${self:provider.stage}-RespondlyAI-RootResourceId
+  
+  environment:
+    NODE_ENV: ${self:provider.stage}
+    STAGE: ${self:provider.stage}
+
+functions:
+  processUpload:
+    handler: src/handler.handler
+    events:
+      - http:
+          path: /uploads/process
+          method: post
+          cors: true
+      - http:
+          path: /uploads/process
+          method: get
+          cors: true
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3002

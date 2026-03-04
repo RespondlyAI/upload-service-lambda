@@ -1,0 +1,31 @@
+{
+  "name": "upload-service-lambda",
+  "version": "1.0.0",
+  "description": "Upload processing service for RespondlyAI",
+  "main": "src/handler.js",
+  "scripts": {
+    "dev": "serverless offline start",
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "logs": "serverless logs -f processUpload -t",
+    "remove": "serverless remove",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "upload",
+    "lambda",
+    "serverless",
+    "aws"
+  ],
+  "author": "RespondlyAI",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "aws-sdk": "^2.1691.0",
+    "serverless": "^4.33.0"
+  },
+  "devDependencies": {
+    "serverless-offline": "^14.0.0"
+  }
+}
