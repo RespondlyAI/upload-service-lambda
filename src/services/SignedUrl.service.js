@@ -1,10 +1,9 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 
 
-const s3Client = new S3Client({ region: process.env.AWS_REGION});
-
+const { s3Client } = require('../config/s3');
 /**
  * Generate a pre-signed URL for uploading a file directly to S3
  * @param {string} fileName - Original file name
@@ -18,8 +17,9 @@ const generateUploadUrl = async (fileName, fileType) => {
         throw new Error('upload bucket is not configured');
     }
 
-    // Creating objectKey - using timestamp to avoid unexpected overwriting
-    const objectKey = `uploads/${Date.now()}_${fileName.replace(/\s+/g, '-')}`;
+    const safeFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    
+    const objectKey = `uploads/${Date.now()}_${safeFileName}`;
 
     const command = new PutObjectCommand({
         Bucket: bucketName,
@@ -29,9 +29,10 @@ const generateUploadUrl = async (fileName, fileType) => {
  
     try {
         // Standard presigned URL generation (15 minutes validity)
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+        const expiresInSeconds = 900;
+        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: expiresInSeconds });
 
-        console.log('Signed URL generated successfully:', signedUrl);
+        console.log('Signed URL generated successfully for objectKey:', objectKey, 'expiresInSeconds:', expiresInSeconds);
         
         return {
             uploadUrl: signedUrl,

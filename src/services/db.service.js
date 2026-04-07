@@ -4,6 +4,10 @@ const { UploadStatus } = require('../utils/constants');
 
 const tableName = process.env.UPLOAD_TABLE_NAME;
 
+if (!tableName || !tableName.trim()) {
+  throw new Error('Missing required environment variable: UPLOAD_TABLE_NAME');
+}
+
 /**
  * Creates an initial upload record in DynamoDB (Status: pending)
  * @param {Object} data 
