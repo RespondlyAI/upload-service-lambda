@@ -9,7 +9,6 @@ provider:
   stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 29
-  # Reference the existing API Gateway from email service
   apiGateway:
     restApiId:
       Fn::ImportValue: ${self:provider.stage}-RespondlyAI-RestApiId
@@ -21,16 +20,19 @@ provider:
     STAGE: ${self:provider.stage}
 
 functions:
-  processUpload:
-    handler: src/handler.handler
+  signedUrl:
+    handler: src/handler.signedUrl
     events:
       - http:
-          path: /uploads/process
+          path: /upload/signed-url
           method: post
           cors: true
+  uploadComplete:
+    handler: src/handler.uploadComplete
+    events:
       - http:
-          path: /uploads/process
-          method: get
+          path: /upload/complete
+          method: post
           cors: true
 
 plugins:
@@ -38,4 +40,4 @@ plugins:
 
 custom:
   serverless-offline:
-    httpPort: 3002
+    httpPort: 3003
