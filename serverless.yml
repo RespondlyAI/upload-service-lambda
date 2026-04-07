@@ -18,6 +18,25 @@ provider:
   environment:
     NODE_ENV: ${self:provider.stage}
     STAGE: ${self:provider.stage}
+    UPLOAD_BUCKET_NAME: ${self:custom.uploadBucketName}
+    UPLOAD_TABLE_NAME: ${self:custom.uploadTableName}
+
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:PutObject"
+            - "s3:GetObject"
+          Resource: "arn:aws:s3:::${self:custom.uploadBucketName}/*"
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:PutItem"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+          Resource:
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.uploadTableName}"
 
 functions:
   signedUrl:
@@ -41,3 +60,33 @@ plugins:
 custom:
   serverless-offline:
     httpPort: 3003
+  uploadBucketName: ${env:UPLOAD_BUCKET_NAME}
+  uploadTableName: ${env:UPLOAD_TABLE_NAME}
+
+resources:
+  Resources:
+    UploadsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.uploadBucketName}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - PUT
+                - GET
+              AllowedOrigins:
+                - "*"
+
+    UploadsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.uploadTableName}
+        AttributeDefinitions:
+          - AttributeName: uploadId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: uploadId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
