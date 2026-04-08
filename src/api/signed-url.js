@@ -21,21 +21,29 @@ module.exports.handler = async (event) => {
       return error('Missing required fields', 400);
     }
 
+    //  Strict ID validation (Alphanumeric, hyphens, underscores)
+    const idRegex = /^[a-zA-Z0-9\-_]+$/;
+    if (!idRegex.test(organizationId) || !idRegex.test(knowledgeBaseId)) {
+      return error('Invalid organizationId or knowledgeBaseId format', 400);
+    }
+
     //  Sanitize filename
     const safeFileName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const lowerFileName = safeFileName.toLowerCase();
 
-    //  Allowed MIME types
-    const allowedTypes = ['application/pdf', 'application/json'];
-    if (!allowedTypes.includes(contentType)) {
-      return error('Invalid file type. Only PDF and JSON allowed.', 400);
+    //  Extension and MIME type validation
+    const allowedTypes = {
+      'pdf': 'application/pdf',
+      'json': 'application/json'
+    };
+    
+    const extension = lowerFileName.split('.').pop();
+    
+    if (!Object.keys(allowedTypes).includes(extension)) {
+      return error('Invalid file extension. Only .pdf and .json are allowed.', 400);
     }
 
-    // Extension validation (PDF + JSON)
-    if (
-      (lowerFileName.endsWith('.pdf') && contentType !== 'application/pdf') ||
-      (lowerFileName.endsWith('.json') && contentType !== 'application/json')
-    ) {
+    if (allowedTypes[extension] !== contentType) {
       return error('File extension and content type mismatch', 400);
     }
 

@@ -7,6 +7,14 @@ const { s3Client } = require('../config/s3');
  */
 const checkFileExists = async (objectKey) => {
   const bucketName = process.env.UPLOAD_BUCKET_NAME;
+
+  if (!bucketName) {
+    throw new Error('UPLOAD_BUCKET_NAME environment variable is missing');
+  }
+  if (!objectKey) {
+    throw new Error('objectKey is required for existence check');
+  }
+
   try {
     const command = new HeadObjectCommand({
       Bucket: bucketName,
@@ -30,6 +38,14 @@ const checkFileExists = async (objectKey) => {
  */
 const getObjectMetadata = async (objectKey) => {
   const bucketName = process.env.UPLOAD_BUCKET_NAME;
+
+  if (!bucketName) {
+    throw new Error('UPLOAD_BUCKET_NAME environment variable is missing');
+  }
+  if (!objectKey) {
+    throw new Error('objectKey is required to fetch metadata');
+  }
+
   try {
     const command = new HeadObjectCommand({
       Bucket: bucketName,

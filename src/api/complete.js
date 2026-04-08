@@ -31,7 +31,8 @@ module.exports.handler = async (event) => {
     const etag = metadata.ETag;
 
     //  Update the DynamoDB record from 'pending' to 'completed'
-    const result = await markUploadCompleted(uploadId, etag);
+    //  Security: Passing objectKey to verify ownership/consistency
+    const result = await markUploadCompleted(uploadId, objectKey, etag);
 
     //  Return success to the client
     return success({
@@ -41,6 +42,9 @@ module.exports.handler = async (event) => {
       message: 'Upload status updated to completed successfully'
     });
   } catch (err) {
+    if (err.name === 'ConditionalCheckFailedException') {
+      return error('Invalid uploadId, wrong status, or objectKey mismatch', 400);
+    }
     console.error('Error in complete handler:', err);
     return error('Internal Server Error', 500);
   }
