@@ -38,11 +38,13 @@ const createUploadRecord = async (data) => {
 };
 
 /**
- * Updates the existing upload record to mark as completed
+ * Updates the existing upload record to mark as completed.
+ * Verified to belong to the correct objectKey and currently in PENDING status.
  * @param {string} uploadId 
+ * @param {string} objectKey 
  * @param {string} etag - The ETag returned by S3 upon completion
  */
-const markUploadCompleted = async (uploadId, etag) => {
+const markUploadCompleted = async (uploadId, objectKey, etag) => {
   const command = new UpdateCommand({
     TableName: tableName,
     Key: { uploadId },
@@ -54,8 +56,11 @@ const markUploadCompleted = async (uploadId, etag) => {
       ':status': UploadStatus.COMPLETED,
       ':uploadedAt': new Date().toISOString(),
       ':etag': etag || 'unknown',
+      ':expectedObjectKey': objectKey,
+      ':pendingStatus': UploadStatus.PENDING
     },
-    ConditionExpression: 'attribute_exists(uploadId)',
+    //  Security: Ensure objectKey matches the record AND status is pending
+    ConditionExpression: 'attribute_exists(uploadId) AND objectKey = :expectedObjectKey AND #s = :pendingStatus',
     ReturnValues: 'ALL_NEW'
   });
 
@@ -64,7 +69,8 @@ const markUploadCompleted = async (uploadId, etag) => {
     return result.Attributes;
   } catch (error) {
     console.error('DynamoDB markUploadCompleted Error:', error);
-    throw new Error('Could not update upload record status to completed');
+    // Propagate error to handler for specific catch
+    throw error;
   }
 };
 
